@@ -324,7 +324,7 @@ const LevelTwoPart_Two = () => {
     // Step 5: Show Selected Placeholder
     tour.addStep({
       id: "selected-placeholder",
-      text: "Your selected placeholder is now visibl  here 📌 and ready for editing.",
+      text: "Your selected placeholder is now visible  here 📌 and ready for editing.",
       attachTo: { element: "#selected-placeholder0", on: "bottom" },
       buttons: [{ text: "Next →", action: tour.next }],
     });
