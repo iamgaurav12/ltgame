@@ -16,6 +16,7 @@ import { AuthProvider , useAuth } from "./context/AuthContext";
 import Login from "./Pages/Login";
 import Signup from "./Pages/Signup";
 import Dashboard from "./Pages/Dashboard";
+import ForgotPassword from "./components/ForgotPAssword";
 
 const App = () => {
   return (
@@ -45,6 +46,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/Level-One-Quiz" element={<LevelOneQuizPage />} />
       <Route path="/Level-Two-Part-One" element={<Level2 />} />
       <Route path="/Matching-Exercise" element={<MatchingExercise data={matchingData} />} />

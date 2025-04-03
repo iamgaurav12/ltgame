@@ -1,7 +1,7 @@
-
+// Pages/firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; 
+import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -14,12 +14,9 @@ const firebaseConfig = {
   measurementId: "G-2XD64VL4X7",
 };
 
-
 const app = initializeApp(firebaseConfig);
 
-
 const auth = getAuth(app);
-const db = getFirestore(app); 
-
+const db = getFirestore(app);
 
 export { auth, db };

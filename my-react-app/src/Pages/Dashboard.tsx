@@ -1,16 +1,20 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   FaFileAlt,
   FaTimes,
   FaChevronRight,
   FaRegLightbulb,
   FaPuzzlePiece,
+  FaSignOutAlt,
+  FaUser
 } from "react-icons/fa";
 import { GrDocumentConfig } from "react-icons/gr";
 import { GiLevelThreeAdvanced } from "react-icons/gi";
 import { LuBrain } from "react-icons/lu";
-import { BsMoonStarsFill, BsSunFill } from "react-icons/bs"; // Icons for toggle
+import { BsMoonStarsFill, BsSunFill } from "react-icons/bs";
 import { useNavigate } from "react-router";
+import { auth } from "./firebase"; // Import the auth object from your firebase file
+import { signOut } from "firebase/auth";
 import Header from "./Header";
 
 interface LevelProps {
@@ -27,8 +31,81 @@ interface CustomDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectPart: (part: string) => void;
-  isDarkMode: boolean; // Added for dark mode
+  isDarkMode: boolean;
 }
+
+// Logout confirmation dialog component
+interface LogoutDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDarkMode: boolean;
+}
+
+const LogoutDialog: React.FC<LogoutDialogProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isDarkMode,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 rounded-xl backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+      <div 
+        className={`rounded-2xl w-full max-w-md mx-4 transform transition-all duration-300 ease-out animate-scale-in ${
+          isDarkMode ? "bg-gray-900" : "bg-white"
+        }`}
+        style={{
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        }}
+      >
+        {/* Header */}
+        <div className={`p-6 border-b ${isDarkMode ? "border-gray-800" : "border-gray-100"}`}>
+          <div className="flex justify-between items-center">
+            <h3 className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-800"}`}>
+              Confirm Logout
+            </h3>
+            <button
+              onClick={onClose}
+              className={`p-2 rounded-full transition-colors duration-200 ${
+                isDarkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
+              }`}
+            >
+              <FaTimes className={`${isDarkMode ? "text-gray-300 hover:text-gray-100" : "text-gray-400 hover:text-gray-600"} text-xl`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"} mb-6`}>
+            Are you sure you want to log out of your account?
+          </p>
+          
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={onClose}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                isDarkMode 
+                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700" 
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 rounded-lg transition-all duration-200 bg-gradient-to-r from-rose-500 to-red-500 text-white hover:from-rose-600 hover:to-red-600 shadow-md hover:shadow-lg"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const CustomDialog: React.FC<CustomDialogProps> = ({
   isOpen,
@@ -80,7 +157,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
                   : "bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200"
               }`}
             >
-              <div className={`${isDarkMode ? "bg-blue-700" : "bg-blue-500"} p-3 rounded-lg`}>
+              <div className={`${isDarkMode ? "bg-blue-700" : "bg-blue-500"} p-3 rounded-lg shadow-md`}>
                 <FaRegLightbulb className="text-white text-xl" />
               </div>
               <div className="ml-4 text-left">
@@ -105,7 +182,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
                   : "bg-gradient-to-r from-green-50 to-green-100 hover:from-lime-100 hover:to-lime-200"
               }`}
             >
-              <div className={`${isDarkMode ? "bg-lime-700" : "bg-lime-500"} p-3 rounded-lg`}>
+              <div className={`${isDarkMode ? "bg-lime-700" : "bg-lime-500"} p-3 rounded-lg shadow-md`}>
                 <FaPuzzlePiece className="text-white text-xl" />
               </div>
               <div className="ml-4 text-left">
@@ -186,7 +263,7 @@ const LevelCard: React.FC<LevelProps & { isDarkMode: boolean }> = ({
       >
         <div className="flex items-center gap-3 mb-3">
           <div
-            className={`p-2 rounded-lg ${
+            className={`p-2 rounded-lg shadow-md ${
               isDarkMode
                 ? active
                   ? "bg-gradient-to-br from-teal-700 to-lime-800 text-white"
@@ -233,7 +310,7 @@ const LevelCard: React.FC<LevelProps & { isDarkMode: boolean }> = ({
                 isDarkMode
                   ? "bg-gradient-to-r from-teal-700 to-lime-700 hover:from-teal-600 hover:to-lime-600"
                   : "bg-gradient-to-r from-teal-500 to-lime-500 hover:from-teal-400 hover:to-lime-400"
-              }`}
+              } transform hover:translate-y-px hover:shadow-xl`}
             >
               Start Level
             </button>
@@ -283,77 +360,268 @@ const levelsData = [
   },
 ];
 
-const showNavBar = true;
-
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
-  const [isDarkMode, setIsDarkMode] = useState(false); // Toggle state
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const levels = useMemo(() => levelsData, []);
+
+  // Load dark mode preference from localStorage
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode) {
+      setIsDarkMode(savedDarkMode === 'true');
+    }
+    
+    // Get user info from auth
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUserName(user.displayName || user.email?.split('@')[0] || 'User');
+      } else {
+        // If no user is logged in, redirect to login
+        navigate('/login');
+      }
+    });
+    
+    // Close mobile menu when window is resized to desktop size
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      unsubscribe();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [navigate, isMenuOpen]);
 
   const handleLevelClick = (index: number) => {
     setActiveIndex(index === activeIndex ? null : index);
   };
 
   const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('darkMode', String(newMode));
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('token');
+      navigate('/login');
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
     <div
-      className={`min-h-screen px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
+      className={`min-h-screen transition-all duration-300 ${
         isDarkMode
           ? "bg-gradient-to-br from-gray-900 via-blue-900/50 to-slate-800"
           : "bg-gradient-to-br from-yellow-100 via-blue-100 to-lime-100"
       }`}
     >
-      {showNavBar && <Header isDarkMode={isDarkMode} />} {/* Pass isDarkMode prop */}
-      <div className="max-w-7xl mx-auto py-36 relative">
-        {/* Dark/Light Mode Toggle Button */}
-        <button
-          onClick={toggleDarkMode}
-          className={`absolute -top-5 -right-20 p-2 rounded-full shadow-md transition-all duration-300 ${
-            isDarkMode
-              ? "bg-gray-800 text-yellow-300 hover:bg-gray-700"
-              : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-          }`}
+      {/* Improved Navbar */}
+      <nav 
+        className={`w-full transition-all duration-300 fixed top-0 left-0 z-40 ${
+          isDarkMode ? "bg-gray-900/90" : "bg-white/90"
+        } backdrop-blur-md border-b ${
+          isDarkMode ? "border-gray-800" : "border-gray-200"
+        } shadow-lg`}
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo and Brand */}
+            <div className="flex-shrink-0 flex items-center">
+              <Header isDarkMode={isDarkMode} />
+            </div>
+            
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center justify-end space-x-4 lg:space-x-6">
+              {/* User Profile - Desktop */}
+              {userName && (
+                <div className="flex items-center space-x-2 px-2">
+                  <div className={`flex items-center justify-center h-8 w-8 rounded-full ${
+                    isDarkMode ? "bg-teal-800" : "bg-teal-100"
+                  }`}>
+                    <FaUser className={`${
+                      isDarkMode ? "text-teal-300" : "text-teal-600"
+                    } text-sm`} />
+                  </div>
+                  <span className={`font-medium ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
+                    {userName}
+                  </span>
+                </div>
+              )}
+              
+              {/* Theme Toggle - Desktop */}
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-full shadow-md transition-all duration-300 ${
+                  isDarkMode
+                    ? "bg-gray-800 text-yellow-300 hover:bg-gray-700"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+                title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDarkMode ? (
+                  <BsSunFill className="text-lg" />
+                ) : (
+                  <BsMoonStarsFill className="text-lg" />
+                )}
+              </button>
+              
+              {/* Logout Button - Desktop */}
+              <button
+                onClick={() => setShowLogoutDialog(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-all duration-300 bg-gradient-to-r from-rose-500 to-red-500 text-white hover:shadow-lg hover:from-rose-600 hover:to-red-600 transform hover:translate-y-px"
+                aria-label="Log out"
+                title="Log out"
+              >
+                <FaSignOutAlt />
+                <span>Logout</span>
+              </button>
+            </div>
+            
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center space-x-2">
+              {/* Theme Toggle - Small Mobile */}
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-full shadow-md transition-all duration-300 ${
+                  isDarkMode
+                    ? "bg-gray-800 text-yellow-300 hover:bg-gray-700"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDarkMode ? (
+                  <BsSunFill className="text-sm" />
+                ) : (
+                  <BsMoonStarsFill className="text-sm" />
+                )}
+              </button>
+              
+              <button
+                onClick={toggleMenu}
+                className={`p-2 rounded-md ${
+                  isDarkMode ? "text-gray-300 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-200"
+                } focus:outline-none`}
+                aria-label="Toggle menu"
+              >
+                <span className="sr-only">Open menu</span>
+                <svg 
+                  className="h-6 w-6" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  {isMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Mobile Menu */}
+        <div 
+          className={`transition-all duration-300 ease-in-out overflow-hidden md:hidden ${
+            isMenuOpen ? "max-h-48 opacity-100 pb-4" : "max-h-0 opacity-0"
+          } ${isDarkMode ? "bg-gray-900/95" : "bg-white/95"} backdrop-blur-sm`}
         >
-          {isDarkMode ? (
-            <BsSunFill className="text-xl" />
-          ) : (
-            <BsMoonStarsFill className="text-xl" />
-          )}
-        </button>
+          <div className="px-4 py-2 space-y-3">
+            {/* User Profile - Mobile */}
+            {userName && (
+              <div className={`flex items-center space-x-3 py-2 px-2 rounded-lg ${
+                isDarkMode ? "bg-gray-800/70" : "bg-gray-100/70"
+              }`}>
+                <div className={`flex items-center justify-center h-8 w-8 rounded-full ${
+                  isDarkMode ? "bg-teal-800" : "bg-teal-100"
+                }`}>
+                  <FaUser className={`${
+                    isDarkMode ? "text-teal-300" : "text-teal-600"
+                  } text-sm`} />
+                </div>
+                <span className={`font-medium ${
+                  isDarkMode ? "text-gray-300" : "text-gray-700"
+                }`}>
+                  {userName}
+                </span>
+              </div>
+            )}
+            
+            {/* Logout Button - Mobile */}
+            <button
+              onClick={() => setShowLogoutDialog(true)}
+              className="flex items-center justify-center gap-2 px-4 py-3 w-full rounded-lg shadow-md transition-all duration-300 bg-gradient-to-r from-rose-500 to-red-500 text-white hover:from-rose-600 hover:to-red-600"
+            >
+              <FaSignOutAlt className="text-lg" />
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
+        </div>
+      </nav>
 
+      {/* Main content */}
+      <div className="w-full max-w-7xl mx-auto py-24 pt-24 sm:pt-28 md:pt-32 px-4 sm:px-6 lg:px-8 relative">
         <div
-          className={`p-8 rounded-3xl shadow-xl ${
-            isDarkMode ? "bg-gray-800 bg-opacity-90" : "bg-white bg-opacity-90"
-          } backdrop-blur-sm`}
+          className={`p-4 sm:p-6 md:p-8 rounded-3xl shadow-xl ${
+            isDarkMode ? "bg-gray-800/90" : "bg-white/90"
+          } backdrop-blur-sm transform transition-all duration-500`}
         >
-          <div className="max-w-3xl mx-auto mb-8 text-center">
+          <div className="max-w-3xl mx-auto mb-6 md:mb-8 text-center">
             <h1
-              className={`text-3xl font-bold mb-2 ${
+              className={`text-2xl sm:text-3xl font-bold mb-2 ${
                 isDarkMode ? "text-gray-100" : "text-gray-900"
               }`}
             >
               Welcome to CLM Training
             </h1>
-            <p className={`${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+            <p className={`text-sm sm:text-base ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
               Select a learning path to begin your contract management journey
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {levels.map((level, index) => (
               <LevelCard
                 key={index}
                 {...level}
                 active={index === activeIndex}
                 onClick={() => handleLevelClick(index)}
-                isDarkMode={isDarkMode} // Pass dark mode state
+                isDarkMode={isDarkMode}
               />
             ))}
           </div>
         </div>
       </div>
+
+      {/* Logout confirmation dialog */}
+      <LogoutDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleLogout}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 };
