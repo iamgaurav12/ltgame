@@ -62,7 +62,7 @@ const Login: React.FC = () => {
       // Success animation before redirect
       setIsLoading(false);
       setTimeout(() => {
-        navigate("/");
+        navigate("/dashboard", { replace: true });
       }, 500);
     } catch (err: any) {
       // Handle specific Firebase error codes
