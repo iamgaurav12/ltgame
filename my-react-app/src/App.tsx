@@ -16,7 +16,7 @@ import { AuthProvider , useAuth } from "./context/AuthContext";
 import Login from "./Pages/Login";
 import Signup from "./Pages/Signup";
 import Dashboard from "./Pages/Dashboard";
-import ForgotPassword from "./components/ForgotPAssword";
+import ForgotPassword from "./components/ForgotPassword";
 
 const App = () => {
   return (

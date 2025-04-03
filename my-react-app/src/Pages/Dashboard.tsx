@@ -12,7 +12,7 @@ import { GrDocumentConfig } from "react-icons/gr";
 import { GiLevelThreeAdvanced } from "react-icons/gi";
 import { LuBrain } from "react-icons/lu";
 import { BsMoonStarsFill, BsSunFill } from "react-icons/bs";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { auth } from "./firebase"; // Import the auth object from your firebase file
 import { signOut } from "firebase/auth";
 import Header from "./Header";
@@ -51,7 +51,7 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 rounded-xl backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
       <div 
         className={`rounded-2xl w-full max-w-md mx-4 transform transition-all duration-300 ease-out animate-scale-in ${
           isDarkMode ? "bg-gray-900" : "bg-white"
@@ -71,6 +71,7 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({
               className={`p-2 rounded-full transition-colors duration-200 ${
                 isDarkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
               }`}
+              aria-label="Close dialog"
             >
               <FaTimes className={`${isDarkMode ? "text-gray-300 hover:text-gray-100" : "text-gray-400 hover:text-gray-600"} text-xl`} />
             </button>
@@ -116,7 +117,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 rounded-xl backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
       <div 
         className={`rounded-2xl w-full max-w-lg mx-4 transform transition-all duration-300 ease-out animate-scale-in ${
           isDarkMode ? "bg-gray-900" : "bg-white"
@@ -136,6 +137,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
               className={`p-2 rounded-full transition-colors duration-200 ${
                 isDarkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
               }`}
+              aria-label="Close dialog"
             >
               <FaTimes className={`${isDarkMode ? "text-gray-300 hover:text-gray-100" : "text-gray-400 hover:text-gray-600"} text-xl`} />
             </button>
@@ -156,6 +158,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
                   ? "bg-gradient-to-r from-blue-900/50 to-blue-800/50 hover:from-blue-800 hover:to-blue-700"
                   : "bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200"
               }`}
+              aria-label="Select Part One"
             >
               <div className={`${isDarkMode ? "bg-blue-700" : "bg-blue-500"} p-3 rounded-lg shadow-md`}>
                 <FaRegLightbulb className="text-white text-xl" />
@@ -181,6 +184,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
                   ? "bg-gradient-to-r from-green-900/50 to-lime-800/50 hover:from-green-800 hover:to-lime-700"
                   : "bg-gradient-to-r from-green-50 to-green-100 hover:from-lime-100 hover:to-lime-200"
               }`}
+              aria-label="Select Part Two"
             >
               <div className={`${isDarkMode ? "bg-lime-700" : "bg-lime-500"} p-3 rounded-lg shadow-md`}>
                 <FaPuzzlePiece className="text-white text-xl" />
@@ -226,6 +230,7 @@ const LevelCard: React.FC<LevelProps & { isDarkMode: boolean }> = ({
 
   const handleStartLevel = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent triggering parent onClick
     if (isLevel2) {
       setShowDialog(true);
     } else {
@@ -235,11 +240,7 @@ const LevelCard: React.FC<LevelProps & { isDarkMode: boolean }> = ({
 
   const handleSelectPart = (part: string) => {
     setShowDialog(false);
-    if (part === "one") {
-      navigate("/Level-Two-Part-One");
-    } else {
-      navigate("/Level-Two-Part-Two");
-    }
+    navigate(part === "one" ? "/Level-Two-Part-One" : "/Level-Two-Part-Two");
   };
 
   return (
@@ -260,6 +261,14 @@ const LevelCard: React.FC<LevelProps & { isDarkMode: boolean }> = ({
                 } hover:from-teal-100/70 hover:to-lime-100/70`
           }`}
         onClick={onClick}
+        role="button"
+        tabIndex={0}
+        aria-pressed={active}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onClick();
+          }
+        }}
       >
         <div className="flex items-center gap-3 mb-3">
           <div
@@ -311,6 +320,7 @@ const LevelCard: React.FC<LevelProps & { isDarkMode: boolean }> = ({
                   ? "bg-gradient-to-r from-teal-700 to-lime-700 hover:from-teal-600 hover:to-lime-600"
                   : "bg-gradient-to-r from-teal-500 to-lime-500 hover:from-teal-400 hover:to-lime-400"
               } transform hover:translate-y-px hover:shadow-xl`}
+              aria-label={`Start ${title} level`}
             >
               Start Level
             </button>
@@ -328,6 +338,7 @@ const LevelCard: React.FC<LevelProps & { isDarkMode: boolean }> = ({
   );
 };
 
+// Define levels data outside the component to avoid recreation on each render
 const levelsData = [
   {
     title: "Simple Quiz",
@@ -360,7 +371,7 @@ const levelsData = [
   },
 ];
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -371,10 +382,17 @@ const Dashboard = () => {
 
   // Load dark mode preference from localStorage
   useEffect(() => {
+    // Check for user's preferred color scheme
+    const prefersDarkMode = window.matchMedia && 
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // First check localStorage, then fallback to system preference
     const savedDarkMode = localStorage.getItem('darkMode');
-    if (savedDarkMode) {
-      setIsDarkMode(savedDarkMode === 'true');
-    }
+    const initialDarkMode = savedDarkMode !== null 
+      ? savedDarkMode === 'true' 
+      : prefersDarkMode;
+      
+    setIsDarkMode(initialDarkMode);
     
     // Get user info from auth
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -385,6 +403,19 @@ const Dashboard = () => {
         navigate('/login');
       }
     });
+    
+    // Listen for system color scheme changes
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleColorSchemeChange = (e: MediaQueryListEvent) => {
+      // Only update if user hasn't set a preference in localStorage
+      if (localStorage.getItem('darkMode') === null) {
+        setIsDarkMode(e.matches);
+      }
+    };
+    
+    if (darkModeMediaQuery.addEventListener) {
+      darkModeMediaQuery.addEventListener('change', handleColorSchemeChange);
+    }
     
     // Close mobile menu when window is resized to desktop size
     const handleResize = () => {
@@ -398,6 +429,9 @@ const Dashboard = () => {
     return () => {
       unsubscribe();
       window.removeEventListener('resize', handleResize);
+      if (darkModeMediaQuery.removeEventListener) {
+        darkModeMediaQuery.removeEventListener('change', handleColorSchemeChange);
+      }
     };
   }, [navigate, isMenuOpen]);
 
@@ -418,6 +452,8 @@ const Dashboard = () => {
       navigate('/login');
     } catch (error) {
       console.error("Error signing out: ", error);
+    } finally {
+      setShowLogoutDialog(false);
     }
   };
 
@@ -523,6 +559,7 @@ const Dashboard = () => {
                   isDarkMode ? "text-gray-300 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-200"
                 } focus:outline-none`}
                 aria-label="Toggle menu"
+                aria-expanded={isMenuOpen}
               >
                 <span className="sr-only">Open menu</span>
                 <svg 
@@ -548,6 +585,7 @@ const Dashboard = () => {
           className={`transition-all duration-300 ease-in-out overflow-hidden md:hidden ${
             isMenuOpen ? "max-h-48 opacity-100 pb-4" : "max-h-0 opacity-0"
           } ${isDarkMode ? "bg-gray-900/95" : "bg-white/95"} backdrop-blur-sm`}
+          aria-hidden={!isMenuOpen}
         >
           <div className="px-4 py-2 space-y-3">
             {/* User Profile - Mobile */}
