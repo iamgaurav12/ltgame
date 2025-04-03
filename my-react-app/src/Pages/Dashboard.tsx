@@ -397,6 +397,7 @@ const Dashboard: React.FC = () => {
     // Get user info from auth
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
+        // Use displayName if available, otherwise fallback to the first part of the email or 'User'
         setUserName(user.displayName || user.email?.split('@')[0] || 'User');
       } else {
         // If no user is logged in, redirect to login
@@ -552,7 +553,20 @@ const Dashboard: React.FC = () => {
                   <BsMoonStarsFill className="text-sm" />
                 )}
               </button>
-              
+
+              {/* Logout Button - Small Mobile */}
+              <button
+                onClick={() => setShowLogoutDialog(true)}
+                className={`p-2 rounded-full shadow-md transition-all duration-300 ${
+                  isDarkMode
+                    ? "bg-gray-800 text-red-400 hover:bg-gray-700"
+                    : "bg-gray-200 text-red-500 hover:bg-gray-300"
+                }`}
+                aria-label="Log out"
+              >
+                <FaSignOutAlt className="text-sm" />
+              </button>
+
               <button
                 onClick={toggleMenu}
                 className={`p-2 rounded-md ${
@@ -583,14 +597,14 @@ const Dashboard: React.FC = () => {
         {/* Mobile Menu */}
         <div 
           className={`transition-all duration-300 ease-in-out overflow-hidden md:hidden ${
-            isMenuOpen ? "max-h-48 opacity-100 pb-4" : "max-h-0 opacity-0"
+            isMenuOpen ? "max-h-64 opacity-100 pb-4" : "max-h-0 opacity-0"
           } ${isDarkMode ? "bg-gray-900/95" : "bg-white/95"} backdrop-blur-sm`}
           aria-hidden={!isMenuOpen}
         >
-          <div className="px-4 py-2 space-y-3">
+          <div className="px-4 py-3 space-y-4">
             {/* User Profile - Mobile */}
             {userName && (
-              <div className={`flex items-center space-x-3 py-2 px-2 rounded-lg ${
+              <div className={`flex items-center space-x-3 py-2 px-3 rounded-lg ${
                 isDarkMode ? "bg-gray-800/70" : "bg-gray-100/70"
               }`}>
                 <div className={`flex items-center justify-center h-8 w-8 rounded-full ${
@@ -607,7 +621,51 @@ const Dashboard: React.FC = () => {
                 </span>
               </div>
             )}
-            
+
+            {/* Navigation Links - Mobile */}
+            <div className="space-y-2">
+              <a
+                href="#"
+                className={`block rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                  isDarkMode
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                Dashboard
+              </a>
+              <a
+                href="#"
+                className={`block rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                  isDarkMode
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                Progress
+              </a>
+              <a
+                href="#"
+                className={`block rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                  isDarkMode
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                Certification
+              </a>
+              <a
+                href="#"
+                className={`block rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                  isDarkMode
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                Resources
+              </a>
+            </div>
+
             {/* Logout Button - Mobile */}
             <button
               onClick={() => setShowLogoutDialog(true)}
