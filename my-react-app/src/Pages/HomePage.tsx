@@ -23,7 +23,7 @@ const HomePage = () => {
       <div className="absolute inset-0 w-full h-full z-0">
         <video
           className="w-full h-full object-cover"
-          src="/video.mp4"  // Path to your video file
+          src="/videos/video.mp4"  // Path to your video file
           autoPlay
           muted
           loop
