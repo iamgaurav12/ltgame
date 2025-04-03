@@ -7,6 +7,8 @@ import { useHighlightedText } from "../context/HighlightedTextContext";
 import { useQuestionType } from "../context/QuestionTypeContext";
 import { ThemeContext } from "../context/ThemeContext";
 import parse, { DOMNode, Element } from "html-react-parser";
+import Shepherd from 'shepherd.js';
+import 'shepherd.js/dist/css/shepherd.css';
 
 // Warning Alert Component
 interface WarningAlertProps {
@@ -31,10 +33,6 @@ const WarningAlert: React.FC<WarningAlertProps> = ({ message, isVisible, isDarkM
     </div>
   );
 };
-// import introJs from "intro.js";
-// import "intro.js/introjs.css";
-import Shepherd from 'shepherd.js';
-import 'shepherd.js/dist/css/shepherd.css';
 
 const extractClauses = (documentText: string) => {
   const sections = documentText.split("<h2");
@@ -126,6 +124,8 @@ const Live_Generation = () => {
       if (primaryValue) {
         if (primaryValue === "What's the annual salary?") {
           initialAnswers[primaryValue] = { amount: "", currency: "USD" };
+        } else if (primaryValue === "Specify the holiday pay?") {
+          initialAnswers[primaryValue] = { amount: "", currency: "USD" };
         } else {
           initialAnswers[primaryValue] = type === "Radio" ? undefined : "";
         }
@@ -140,45 +140,6 @@ const Live_Generation = () => {
     return initialAnswers;
   }
 
-  //
-  // useEffect(() => {
-  //   const intro = introJs();
-  
-  //   intro.setOptions({
-  //     steps: [
-  //       {
-  //         intro: "Welcome to the Live Document Generation Page! Here, you can answer questions and see the document update in real-time.",
-  //         tooltipClass: "introjs-tooltip-left-bottom",
-  //       },
-  //       {
-  //         element: document.querySelector("#questions-section") as HTMLElement,
-  //         intro: "Answer the questions here. Your answers will automatically update the document on the right.",
-  //         tooltipClass: "introjs-tooltip-bottom-center", 
-  //       },
-  //       {
-  //         element: document.querySelector("#document-preview") as HTMLElement, 
-  //         intro: "This is the live document preview. It updates as you answer the questions.",
-  //         tooltipClass: "introjs-tooltip-bottom-center", 
-  //       },
-  //       {
-  //         element: document.querySelector("#finish-button") as HTMLElement, 
-  //         intro: "Once you've answered all questions, click 'Finish' to generate the final document.",
-  //         tooltipClass: "introjs-tooltip-bottom-center", 
-  //       },
-  //     ],
-  //     showProgress: false,
-  //     showBullets: false,
-  //     exitOnOverlayClick: true, 
-  //     disableInteraction: false,
-  //     hidePrev: true,
-  //     hideNext: false,
-  //     nextLabel: "Next →",
-  //     doneLabel: "Done",
-  //   });
-  
-  //   intro.start();
-  // }, []);
-
   useEffect(() => {
     const tour = new Shepherd.Tour({
       defaultStepOptions: {
@@ -186,36 +147,32 @@ const Live_Generation = () => {
         classes: "shadow-md bg-purple-dark",
         scrollTo: { behavior: "smooth", block: "center" },
       },
-      useModalOverlay: true, 
+      useModalOverlay: true,
     });
-  
-    // Step 1: Welcome Message
+
     tour.addStep({
       id: "welcome",
       text: "Welcome to the Live Document Generation Page! Here, you can answer questions and see the document update in real-time.",
-      attachTo: { element: "body", on: "bottom-start" }, 
+      attachTo: { element: "body", on: "bottom-start" },
       classes: "shepherd-theme-arrows",
       buttons: [{ text: "Next →", action: tour.next }],
     });
-  
-    // Step 2: Questions Section
+
     tour.addStep({
       id: "questions-section",
       text: "<strong>Answer the questions here. </strong> Your answers will automatically update the document on the right.",
       attachTo: { element: "#questions-section", on: "bottom" },
       buttons: [{ text: "Next →", action: tour.next }],
     });
-  
-    // Step 3: Document Preview
+
     tour.addStep({
       id: "document-preview",
       text: "This is the live document preview. It updates as you answer the questions.",
       attachTo: { element: "#document-preview", on: "bottom" },
-      classes: "shepherd-theme-arrows", 
+      classes: "shepherd-theme-arrows",
       buttons: [{ text: "Next →", action: tour.next }],
     });
-  
-    // Step 4: Finish Button
+
     tour.addStep({
       id: "finish-button",
       text: "Once you've answered all questions, click 'Finish' 🎯 to generate the final document.",
@@ -223,15 +180,13 @@ const Live_Generation = () => {
       classes: "introjs-tooltip-bottom-center",
       buttons: [{ text: "Done", action: tour.complete }],
     });
-  
+
     tour.start();
-  
+
     return () => {
       tour.complete();
     };
   }, []);
-  
-
 
   useEffect(() => {
     const clauses = extractClauses(documentText);
@@ -261,12 +216,19 @@ const Live_Generation = () => {
       const isProbationApplicable = userAnswers["Is the clause of probationary period applicable?"] as boolean | undefined;
       if (isProbationApplicable !== true) skipped.push("What's the probation period length?");
     }
+    if ("Would unused holidays would be paid for if employee is termination?" in userAnswers) {
+      const isUnusedHolidaysApplicable = userAnswers["Would unused holidays would be paid for if employee is termination?"] as boolean | undefined;
+      if (isUnusedHolidaysApplicable !== true) {
+        skipped.push("Specify the holiday pay?");
+        skipped.push("Specify the number of unused holidays?");
+      }
+    }
     setSkippedQuestions(skipped);
   }, [userAnswers]);
 
   useEffect(() => {
     let updatedText = getBaseDocumentText(documentText);
-  
+
     const probationSection = `
       <div>
         <!-- Wrapper for each clause section -->
@@ -281,10 +243,10 @@ const Live_Generation = () => {
         <p>The Employee will be enrolled in the Company's pension scheme in accordance with auto-enrolment legislation.)</p>
       </div>
     `;
-  
+
     Object.entries(userAnswers).forEach(([question, answer]) => {
       console.log(`Processing question: ${question}, answer: ${answer}`);
-  
+
       if (question === "Is the clause of probationary period applicable?") {
         if (answer === true) {
           const jobTitleIndex = updatedText.indexOf('<h2 className="text-2xl font-bold mt-6">JOB TITLE AND DUTIES</h2>');
@@ -295,7 +257,7 @@ const Live_Generation = () => {
           }
         }
       }
-  
+
       if (question === "Is the Pension clause applicable?") {
         if (answer === true) {
           const terminationIndex = updatedText.indexOf('<h2 className="text-2xl font-bold mt-6">TERMINATION CLAUSE</h2>');
@@ -306,40 +268,40 @@ const Live_Generation = () => {
           }
         }
       }
-  
+
       if (question === "Is the employee entitled to overtime work?") {
         const overtimeYesClause = "{The Employee is entitled to overtime pay for authorized overtime work}";
         const overtimeNoClause = "{The Employee shall not receive additional payment for overtime worked}";
-      
+
         updatedText = updatedText.replace(
           /<p className="mt-5" id="employment-agreement-working-hours">([\s\S]*?)<\/p>/i,
           () => {
             let replacementText = "";
-      
+
             if (answer === true) {
               replacementText = `${overtimeYesClause}`;
             } else if (answer === false) {
               replacementText = `${overtimeNoClause}`;
             }
-      
+
             return `<p className="mt-5" id="employment-agreement-working-hours">${replacementText}</p>`;
           }
         );
       }
       if (question === "Is the Employee required to perform additional duties as part of their employment?") {
         const rawClause = "The Employee may be required to perform additional duties as reasonably assigned by the Company.";
-      
+
         const flexibleClauseRegex = new RegExp(
           `[\\{]?\\s*${rawClause.split(" ").map(word => `${word}\\s*`).join("")}[\\}]?`,
           "g"
         );
-      
+
         updatedText = updatedText.replace(flexibleClauseRegex, "");
-      
+
         if (answer === true) {
           const jobTitleSectionRegex = /<h2[^>]*>JOB TITLE AND DUTIES<\/h2>\s*<p[^>]*>([\s\S]*?)<\/p>/i;
           const match = updatedText.match(jobTitleSectionRegex);
-      
+
           if (match) {
             const existingText = match[1].trim();
             const clauseToInsert = ` {${rawClause}}`;
@@ -356,16 +318,38 @@ const Live_Generation = () => {
           `[\\{]?\\s*${rawClause.split(" ").map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*').join('')}[\\}]?`,
           "g"
         );
-      
+
         updatedText = updatedText.replace(flexibleClauseRegex, "");
-      
+
         if (answer === true) {
           const holidaySectionRegex = /<h2[^>]*>HOLIDAY ENTITLEMENT<\/h2>\s*<p[^>]*>([\s\S]*?)<\/p>/i;
           const match = updatedText.match(holidaySectionRegex);
-      
+
           if (match) {
             const existingText = match[1].trim();
-            const clauseToInsert = ` {${rawClause}}`;
+            let modifiedClause = rawClause;
+
+            // Replace the placeholders with actual values if they exist
+            const unusedHolidaysAnswer = userAnswers["Specify the number of unused holidays?"];
+            const holidayPayAnswer = userAnswers["Specify the holiday pay?"] as { amount: string; currency: string } | undefined;
+
+            if (unusedHolidaysAnswer) {
+              modifiedClause = modifiedClause.replace(
+                "[Unused Holiday Days]",
+                `<span class="${isDarkMode ? "bg-teal-600/70 text-teal-100" : "bg-teal-200/70 text-teal-900"} px-1 rounded">${unusedHolidaysAnswer}</span>`
+              );
+            }
+
+            if (holidayPayAnswer?.amount) {
+              const formattedHolidayPay = `${holidayPayAnswer.amount} ${holidayPayAnswer.currency}`;
+              modifiedClause = modifiedClause.replace(
+                "[Holiday Pay]",
+                `<span class="${isDarkMode ? "bg-teal-600/70 text-teal-100" : "bg-teal-200/70 text-teal-900"} px-1 rounded">${formattedHolidayPay}</span>`
+              );
+              modifiedClause = modifiedClause.replace("[USD]", "");
+            }
+
+            const clauseToInsert = ` {${modifiedClause}}`;
             const updatedParagraph = existingText + clauseToInsert;
             updatedText = updatedText.replace(match[0], match[0].replace(existingText, updatedParagraph));
           }
@@ -417,7 +401,7 @@ const Live_Generation = () => {
           }
         }
       }
-      
+
       const placeholder = findPlaceholderByValue(question);
 
       if (placeholder) {
@@ -465,6 +449,38 @@ const Live_Generation = () => {
           updatedText = updatedText.replace(new RegExp(`\\s*${prevEmploymentClause.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&")}\\s*`, "gi"), "");
         }
       }
+
+      // Handle the Unused Holiday Days placeholder
+      if (question === "Specify the number of unused holidays?") {
+        const escapedPlaceholder = "Unused Holiday Days".replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
+        if (typeof answer === "string" && answer.trim()) {
+          updatedText = updatedText.replace(
+            new RegExp(`\\[${escapedPlaceholder}\\]\\*`, "gi"),
+            `<span class="${isDarkMode ? "bg-teal-600/70 text-teal-100" : "bg-teal-200/70 text-teal-900"} px-1 rounded">${answer}</span>`
+          );
+        } else {
+          updatedText = updatedText.replace(
+            new RegExp(`\\[${escapedPlaceholder}\\]\\*`, "gi"),
+            "[Unused Holiday Days]"
+          );
+        }
+      }
+
+      // Handle the Holiday Pay placeholder
+      if (question === "What's the holiday pay amount?") {
+        const escapedPlaceholder = "Holiday Pay".replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
+        if (typeof answer === "string" && answer.trim()) {
+          updatedText = updatedText.replace(
+            new RegExp(`\\[${escapedPlaceholder}\\]\\*`, "gi"),
+            `<span class="${isDarkMode ? "bg-teal-600/70 text-teal-100" : "bg-teal-200/70 text-teal-900"} px-1 rounded">${answer}</span>`
+          );
+        } else {
+          updatedText = updatedText.replace(
+            new RegExp(`\\[${escapedPlaceholder}\\]\\*`, "gi"),
+            "[Holiday Pay]"
+          );
+        }
+      }
     });
 
     setAgreement(updatedText + " ");
@@ -500,228 +516,237 @@ const Live_Generation = () => {
   const renderAnswerInput = useCallback((originalIndex: number, displayIndex: number) => {
     const text = highlightedTexts[originalIndex];
     const { primaryValue } = determineQuestionType(text);
-    const currentType = selectedTypes[originalIndex] || "Text";
+    if (!primaryValue) return null;
+
     const isRequired = requiredQuestions[originalIndex] || false;
+    const currentType = selectedTypes[originalIndex] || "Text";
+    const questionText = editedQuestions[originalIndex] || primaryValue;
     const answer = userAnswers[primaryValue];
     const error = inputErrors[primaryValue];
-  
-    console.log(`Rendering input for: ${primaryValue}, Type: ${currentType}, Answer: ${answer}`);
-  
-    const isProbationClause = primaryValue === "Is the clause of probationary period applicable?";
-    const hasExplicitProbationLength = highlightedTexts.includes("Probation Period Length");
-  
-    const followUps: { question: string; type: string }[] = [];
-    if (isProbationClause && hasExplicitProbationLength && answer === true) {
-      followUps.push({ question: "What's the probation period length?", type: "Number" });
+
+    // Handle both Annual Salary and Holiday Pay with currency dropdown
+    if (primaryValue === "What's the annual salary?" || primaryValue === "Specify the holiday pay?") {
+      const answerWithCurrency = answer as { amount: string; currency: string } | undefined;
+      const amount = answerWithCurrency?.amount || "";
+      const currency = answerWithCurrency?.currency || "USD";
+
+      return (
+        <div key={originalIndex} id="questions-section" className="mb-6">
+          <label className={`block text-lg font-medium mb-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+            {questionText} {isRequired && <span className="text-red-500">*</span>}
+          </label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => {
+                const value = e.target.value;
+                setUserAnswers((prev) => ({
+                  ...prev,
+                  [primaryValue]: { ...prev[primaryValue], amount: value },
+                }));
+                const error = validateInput("Number", value, primaryValue);
+                setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
+              }}
+              ref={(el) => {
+                inputRefs.current[displayIndex] = el;
+              }}
+              className={`p-3 w-1/2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${
+                isDarkMode
+                  ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70`
+                  : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`
+              }`}
+              placeholder="Enter amount"
+            />
+            <select
+              value={currency}
+              onChange={(e) => {
+                setUserAnswers((prev) => ({
+                  ...prev,
+                  [primaryValue]: { ...prev[primaryValue], currency: e.target.value },
+                }));
+              }}
+              className={`p-3 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${
+                isDarkMode
+                  ? "bg-gray-700/80 border border-teal-600 focus:ring-teal-400 text-teal-200"
+                  : "bg-white/80 border border-teal-200 focus:ring-teal-500 text-teal-800"
+              }`}
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="INR">INR</option>
+              <option value="SEK">SEK</option>
+              <option value="AUD">AUD</option>
+              <option value="JPY">JPY</option>
+              <option value="CAD">CAD</option>
+              <option value="CHF">CHF</option>
+            </select>
+          </div>
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        </div>
+      );
     }
-    if (primaryValue === "Is the Pension clause applicable?" && answer === true) {
-      // followUps.push({ question: "Who is the HR/Relevant Contact?", type: "Text" });
-    }
-    if (primaryValue === "Is the sick pay policy applicable?" && answer === true) {
-      followUps.push({ question: "What's the sick pay policy?", type: "Text" });
-    }
-    if (primaryValue === "Does the employee receive overtime payment?" && answer === true) {
-      followUps.push({ question: "What's the overtime pay rate?", type: "Number" });
-    }
-    if (primaryValue === "Is the previous service applicable?" && answer === true) {
-      followUps.push({ question: "What's the previous employment start date?", type: "Date" });
-    }
-  
-    return (
-      <div className="mb-8" key={displayIndex}>
-        <label
-          className={`block text-lg font-medium mb-2 ${isDarkMode ? "text-teal-200" : "text-teal-800"}`}
-        >
-          {editedQuestions[originalIndex] || primaryValue} {isRequired && <span className="text-red-500">*</span>}
-        </label>
-        {currentType === "Radio" ? (
+
+    // Handle Radio type questions
+    if (currentType === "Radio") {
+      return (
+        <div key={originalIndex} id="questions-section" className="mb-6">
+          <label className={`block text-lg font-medium mb-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+            {questionText} {isRequired && <span className="text-red-500">*</span>}
+          </label>
           <div className="flex space-x-6">
-            <label className={`flex items-center space-x-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+            <label className="flex items-center space-x-2">
               <input
                 type="radio"
                 name={primaryValue}
                 checked={answer === true}
                 onChange={() => {
                   setUserAnswers((prev) => ({ ...prev, [primaryValue]: true }));
-                  const newErrors = { ...inputErrors };
-                  delete newErrors[primaryValue];
-                  setInputErrors(newErrors);
+                  setInputErrors((prev) => ({ ...prev, [primaryValue]: "" }));
                 }}
-                className={`form-radio ${isDarkMode ? "text-teal-400 focus:ring-teal-400" : "text-teal-500 focus:ring-teal-500"}`}
+                className={`form-radio h-5 w-5 ${isDarkMode ? "text-teal-400" : "text-teal-600"} focus:ring-0`}
               />
-              <span>Yes</span>
+              <span className={isDarkMode ? "text-teal-200" : "text-teal-800"}>Yes</span>
             </label>
-            <label className={`flex items-center space-x-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+            <label className="flex items-center space-x-2">
               <input
                 type="radio"
                 name={primaryValue}
                 checked={answer === false}
                 onChange={() => {
                   setUserAnswers((prev) => ({ ...prev, [primaryValue]: false }));
-                  const newErrors = { ...inputErrors };
-                  delete newErrors[primaryValue];
-                  setInputErrors(newErrors);
+                  setInputErrors((prev) => ({ ...prev, [primaryValue]: "" }));
                 }}
-                className={`form-radio ${isDarkMode ? "text-teal-400 focus:ring-teal-400" : "text-teal-500 focus:ring-teal-500"}`}
+                className={`form-radio h-5 w-5 ${isDarkMode ? "text-teal-400" : "text-teal-600"} focus:ring-0`}
               />
-              <span>No</span>
+              <span className={isDarkMode ? "text-teal-200" : "text-teal-800"}>No</span>
             </label>
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
-        ) : currentType === "Number" ? (
-          <>
-            <input
-              type="number"
-              value={typeof answer === "string" ? answer : ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                setUserAnswers((prev) => ({ ...prev, [primaryValue]: value }));
-                const error = validateInput(currentType, value, primaryValue);
-                setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
-              }}
-              className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70` : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`}`}
-              placeholder="Enter a number"
-              ref={(el) => {
-                inputRefs.current[displayIndex] = el;
-              }}
-            />
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-          </>
-        ) : currentType === "Date" ? (
-          <>
-            <input
-              type="date"
-              value={typeof answer === "string" ? answer : ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                setUserAnswers((prev) => ({ ...prev, [primaryValue]: value }));
-                const error = validateInput(currentType, value, primaryValue);
-                setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
-              }}
-              className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200` : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800`}`}
-            />
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-          </>
-        ) : currentType === "Text" || currentType === "Paragraph" || currentType === "Email" ? (
-          primaryValue === "What's the annual salary?" ? (
-            <div className="flex space-x-4">
-              <input
-                type="number"
-                value={typeof answer === "object" && answer?.amount ? answer.amount : ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setUserAnswers((prev) => ({
-                    ...prev,
-                    [primaryValue]: { ...prev[primaryValue], amount: value },
-                  }));
-                  const error = validateInput("Number", value, primaryValue);
-                  setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
-                }}
-                className={`p-3 w-3/4 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70` : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`}`}
-                placeholder="Enter amount"
-              />
-              <select
-                value={typeof answer === "object" && answer?.currency ? answer.currency : "USD"}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setUserAnswers((prev) => ({
-                    ...prev,
-                    [primaryValue]: { ...prev[primaryValue], currency: value },
-                  }));
-                }}
-                className={`p-3 w-1/4 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200` : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800`}`}
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-              </select>
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-            </div>
-          ) : (
-            <>
-              <input
-                type={currentType === "Email" ? "email" : "text"}
-                value={typeof answer === "string" ? answer : ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setUserAnswers((prev) => ({ ...prev, [primaryValue]: value }));
-                  const error = validateInput(currentType, value, primaryValue);
-                  setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
-                }}
-                className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70` : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`}`}
-                placeholder={`Enter ${primaryValue.toLowerCase()}`}
-              />
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-            </>
-          )
-        ) : null}
-  
-        {followUps.map((followUp, idx) => {
-          const followUpAnswer = userAnswers[followUp.question];
-          const followUpError = inputErrors[followUp.question];
-          return (
-            <div key={idx} className="ml-6">
-              <label className={`block text-md font-medium mb-2 ${isDarkMode ? "text-teal-300" : "text-teal-600"}`}>
-                {/* {followUp.question} */}
-              </label>
-              {followUp.type === "Number" ? (
-                <>
-                  {/* <input
-                    type="number"
-                    value={typeof followUpAnswer === "string" ? followUpAnswer : ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setUserAnswers((prev) => ({ ...prev, [followUp.question]: value }));
-                      const error = validateInput(followUp.type, value, followUp.question);
-                      setInputErrors((prev) => ({ ...prev, [followUp.question]: error }));
-                    }}
-                    className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${followUpError ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70` : `bg-white/80 border ${followUpError ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`}`}
-                    placeholder="Enter a number"
-                  /> */}
-                  {/* {followUpError && <p className="text-red-500 text-sm mt-2">{followUpError}</p>} */}
-                </>
-              ) : followUp.type === "Date" ? (
-                <>
-                  <input
-                    type="date"
-                    value={typeof followUpAnswer === "string" ? followUpAnswer : ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setUserAnswers((prev) => ({ ...prev, [followUp.question]: value }));
-                      const error = validateInput(followUp.type, value, followUp.question);
-                      setInputErrors((prev) => ({ ...prev, [followUp.question]: error }));
-                    }}
-                    className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${followUpError ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200` : `bg-white/80 border ${followUpError ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800`}`}
-                    placeholder="Select a date"
-                  />
-                  {followUpError && <p className="text-red-500 text-sm mt-2">{followUpError}</p>}
-                </>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    value={typeof followUpAnswer === "string" ? followUpAnswer : ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setUserAnswers((prev) => ({ ...prev, [followUp.question]: value }));
-                      const error = validateInput("Text", value, followUp.question);
-                      setInputErrors((prev) => ({ ...prev, [followUp.question]: error }));
-                    }}
-                    className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isDarkMode ? `bg-gray-700/80 border ${followUpError ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70` : `bg-white/80 border ${followUpError ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`}`}
-                    placeholder={`Enter ${followUp.question.toLowerCase()}`}
-                  />
-                  {followUpError && <p className="text-red-500 text-sm mt-2">{followUpError}</p>}
-                </>
-              )}
-            </div>
-          );
-        })}
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        </div>
+      );
+    }
+
+    // Handle Number type questions
+    if (currentType === "Number") {
+      return (
+        <div key={originalIndex} id="questions-section" className="mb-6">
+          <label className={`block text-lg font-medium mb-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+            {questionText} {isRequired && <span className="text-red-500">*</span>}
+          </label>
+          <input
+            type="number"
+            value={typeof answer === "string" ? answer : ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setUserAnswers((prev) => ({ ...prev, [primaryValue]: value }));
+              const error = validateInput(currentType, value, primaryValue);
+              setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
+            }}
+            ref={(el) => {
+              inputRefs.current[displayIndex] = el;
+            }}
+            className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${
+              isDarkMode
+                ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70`
+                : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`
+            }`}
+            placeholder="Enter a number"
+          />
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        </div>
+      );
+    }
+
+    // Handle Date type questions
+    if (currentType === "Date") {
+      return (
+        <div key={originalIndex} id="questions-section" className="mb-6">
+          <label className={`block text-lg font-medium mb-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+            {questionText} {isRequired && <span className="text-red-500">*</span>}
+          </label>
+          <input
+            type="date"
+            value={typeof answer === "string" ? answer : ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setUserAnswers((prev) => ({ ...prev, [primaryValue]: value }));
+              const error = validateInput(currentType, value, primaryValue);
+              setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
+            }}
+            ref={(el) => {
+              inputRefs.current[displayIndex] = el;
+            }}
+            className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${
+              isDarkMode
+                ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200`
+                : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800`
+            }`}
+          />
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        </div>
+      );
+    }
+
+    // Handle Paragraph type questions
+    if (currentType === "Paragraph") {
+      return (
+        <div key={originalIndex} id="questions-section" className="mb-6">
+          <label className={`block text-lg font-medium mb-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+            {questionText} {isRequired && <span className="text-red-500">*</span>}
+          </label>
+          <textarea
+            value={typeof answer === "string" ? answer : ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setUserAnswers((prev) => ({ ...prev, [primaryValue]: value }));
+              const error = validateInput(currentType, value, primaryValue);
+              setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
+            }}
+            className={`p-3 w-full h-32 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 resize-y ${
+              isDarkMode
+                ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70`
+                : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`
+            }`}
+            placeholder={`Enter ${primaryValue.toLowerCase()}`}
+          />
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        </div>
+      );
+    }
+
+    // Default to Text or Email type
+    return (
+      <div key={originalIndex} id="questions-section" className="mb-6">
+        <label className={`block text-lg font-medium mb-2 ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
+          {questionText} {isRequired && <span className="text-red-500">*</span>}
+        </label>
+        <input
+          type={currentType === "Email" ? "email" : "text"}
+          value={typeof answer === "string" ? answer : ""}
+          onChange={(e) => {
+            const value = e.target.value;
+            setUserAnswers((prev) => ({ ...prev, [primaryValue]: value }));
+            const error = validateInput(currentType, value, primaryValue);
+            setInputErrors((prev) => ({ ...prev, [primaryValue]: error }));
+          }}
+          ref={(el) => {
+            inputRefs.current[displayIndex] = el;
+          }}
+          className={`p-3 w-full rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${
+            isDarkMode
+              ? `bg-gray-700/80 border ${error ? "border-red-400" : "border-teal-600"} focus:ring-teal-400 text-teal-200 placeholder-teal-300/70`
+              : `bg-white/80 border ${error ? "border-red-400" : "border-teal-200"} focus:ring-teal-500 text-teal-800 placeholder-teal-400/70`
+          }`}
+          placeholder={`Enter ${primaryValue.toLowerCase()}`}
+        />
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </div>
     );
   }, [highlightedTexts, selectedTypes, requiredQuestions, userAnswers, inputErrors, editedQuestions, isDarkMode, validateInput]);
 
   const areAllRequiredAnswered = () => {
-    // Iterate over the re-ordered indices to check required questions
     for (let displayIndex = 0; displayIndex < questionOrder.length; displayIndex++) {
       const originalIndex = questionOrder[displayIndex];
       const { primaryValue } = determineQuestionType(highlightedTexts[originalIndex] || "");
@@ -767,6 +792,24 @@ const Live_Generation = () => {
           if (inputErrors["What's the probation period length?"]) return false;
         }
       }
+
+      // Add validation for unused holidays follow-up questions
+      if (primaryValue === "Would unused holidays would be paid for if employee is termination?" && answer === true) {
+        const holidayPayIndex = highlightedTexts.indexOf("[Holiday Pay]");
+        const unusedHolidayDaysIndex = highlightedTexts.indexOf("[Unused Holiday Days]");
+        
+        if (holidayPayIndex !== -1 && requiredQuestions[holidayPayIndex]) {
+          const holidayPayAnswer = userAnswers["Specify the holiday pay?"];
+          if (!holidayPayAnswer?.amount || (typeof holidayPayAnswer.amount === "string" && !holidayPayAnswer.amount.trim())) return false;
+          if (inputErrors["Specify the holiday pay?"]) return false;
+        }
+
+        if (unusedHolidayDaysIndex !== -1 && requiredQuestions[unusedHolidayDaysIndex]) {
+          const unusedHolidaysAnswer = userAnswers["Specify the number of unused holidays?"];
+          if (!unusedHolidaysAnswer || (typeof unusedHolidaysAnswer === "string" && !unusedHolidaysAnswer.trim())) return false;
+          if (inputErrors["Specify the number of unused holidays?"]) return false;
+        }
+      }
     }
     return true;
   };
@@ -805,7 +848,6 @@ const Live_Generation = () => {
                 <h2 className={`text-2xl font-semibold mb-6 tracking-wide ${isDarkMode ? "text-teal-300" : "text-teal-700"}`}>
                   Questions
                 </h2>
-                {/* Render questions based on the re-ordered questionOrder */}
                 {questionOrder.map((originalIndex, displayIndex) => {
                   const text = highlightedTexts[originalIndex];
                   const { primaryValue } = determineQuestionType(text);
@@ -814,7 +856,7 @@ const Live_Generation = () => {
                 })}
                 <div className="flex justify-end mt-8">
                   <button
-                  id="finish-button"
+                    id="finish-button"
                     className={`relative px-6 py-3 rounded-lg shadow-md transform transition-all duration-300 flex items-center space-x-2 ${
                       areAllRequiredAnswered()
                         ? isDarkMode
@@ -879,8 +921,3 @@ const Live_Generation = () => {
 };
 
 export default Live_Generation;
-
-
-
-
-// original

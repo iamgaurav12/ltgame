@@ -6,8 +6,6 @@ import { useHighlightedText } from "../context/HighlightedTextContext";
 import { determineQuestionType, numberTypes } from "../utils/questionTypeUtils";
 import { ThemeContext } from "../context/ThemeContext";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-// import introJs from "intro.js";
-// import "intro.js/introjs.css";
 import 'shepherd.js/dist/css/shepherd.css';
 
 interface DivWithDropdownProps {
@@ -109,7 +107,6 @@ const DivWithDropdown: React.FC<DivWithDropdownProps> = ({
         <div id="text-option-button" className="absolute top-1/2 right-6 transform -translate-y-1/2 flex items-center space-x-2">
           <div className="relative">
             <button
-              
               className={`flex items-center space-x-2 text-sm px-3 py-1 rounded-lg shadow-md transition-all duration-300 ${
                 isDarkMode
                   ? "bg-gray-600/80 text-teal-200 hover:bg-gray-500"
@@ -122,7 +119,7 @@ const DivWithDropdown: React.FC<DivWithDropdownProps> = ({
             </button>
             {isOpen && (
               <div
-              id="open-drawer"
+                id="open-drawer"
                 className={`absolute right-0 mt-1 w-40 h-[12vh] rounded-lg shadow-lg z-50 ${
                   isDarkMode
                     ? "bg-gray-700/90 backdrop-blur-sm border-gray-600"
@@ -180,24 +177,20 @@ const DivWithDropdown: React.FC<DivWithDropdownProps> = ({
 
 const Questionnaire = () => {
   const { isDarkMode } = useContext(ThemeContext);
-  // const [leftActive, setLeftActive] = React.useState(true);
-  // const [rightActive, setRightActive] = React.useState(false);
   const { highlightedTexts } = useHighlightedText();
   const {
     selectedTypes,
     setSelectedTypes,
-    // editedQuestions,
     setEditedQuestions,
     requiredQuestions,
     setRequiredQuestions,
     questionOrder,
     setQuestionOrder,
-    uniqueQuestions, // Use context state
-    setUniqueQuestions, // Use context setter
-    questionTexts, // Use context state
-    setQuestionTexts, // Use context setter
+    uniqueQuestions,
+    setUniqueQuestions,
+    questionTexts,
+    setQuestionTexts,
   } = useQuestionType();
-  // const [duplicateDetected] = React.useState<boolean>(false);
 
   const followUpQuestions = [
     "What's the probation period length?",
@@ -256,7 +249,7 @@ const Questionnaire = () => {
     }
 
     console.log("processedTexts:", processedTexts);
-    setUniqueQuestions(processedTexts); // Update context state
+    setUniqueQuestions(processedTexts);
     const initialRequired = initializeRequiredStatus(processedTexts);
     setRequiredQuestions(initialRequired);
 
@@ -264,7 +257,11 @@ const Questionnaire = () => {
       (text) => determineQuestionType(text).primaryValue || "No text selected"
     );
     const initialTypes = processedTexts.map((text) => {
-      const { primaryType } = determineQuestionType(text);
+      const { primaryValue, primaryType } = determineQuestionType(text);
+      // Default "What's the annual salary?" to "Number" type
+      if (primaryValue === "What's the annual salary?") {
+        return "Number";
+      }
       if (numberTypes.hasOwnProperty(text)) {
         return "Number";
       }
@@ -274,11 +271,10 @@ const Questionnaire = () => {
     console.log("initialTexts (questions):", initialTexts);
     console.log("initialTypes:", initialTypes);
 
-    setQuestionTexts(initialTexts); // Update context state
+    setQuestionTexts(initialTexts);
     setSelectedTypes(initialTypes);
     setEditedQuestions(initialTexts);
 
-    // Initialize questionOrder if not already set
     if (questionOrder.length !== processedTexts.length) {
       setQuestionOrder(processedTexts.map((_, index) => index));
     }

@@ -33,9 +33,9 @@ export const numberTypes: { [key: string]: string } = {
   "Overtime Pay Rate": "What's the overtime pay rate?",
   "Annual Salary": "What's the annual salary?",
   "Holiday Entitlement": "What's the holiday entitlement?",
-  "Unused Holiday Days": "How many unused holiday days?",
-  "Holiday Pay": "What's the holiday pay amount?",
-  "Notice Period": "What's the notice period?" // Moved from radioTypes to numberTypes
+  "Unused Holiday Days": "Specify the number of unused holidays?",
+  "Holiday Pay": "Specify the holiday pay?",
+  "Notice Period": "What's the notice period?"
 };
 
 export const dateTypes: { [key: string]: string } = {
@@ -54,15 +54,11 @@ export const radioTypes: { [key: string]: string } = {
   "The Employee shall not receive additional payment for overtime worked": "Is the employee entitled to overtime work?",
   "After the probationary period, either party may terminate the employment by providing [Notice Period] written notice. The Company reserves the right to make a payment in lieu of notice. The Company may summarily dismiss the Employee without notice in cases of gross misconduct.": "Is the termination clause applicable?",
   "The Employee is entitled to overtime pay for authorized overtime work": "Is the employee entitled to overtime work?",
-  "Upon termination, unused leave will be paid. For [Unused Holiday Days] unused days, the holiday pay is [Holiday Pay] [USD].":"Would unused holidays would be paid for if employee is termination?",
-  "The Employee will be enrolled in the Company’s pension scheme in accordance with auto-enrolment legislation. Further details are available from [HR/Relevant Contact].": "Is the Pension clause applicable?",
-  "/The Employee may be required to work at [other locations]./":"Does the employee need to work at additional locations besides the normal place of work?",
+  "Upon termination, unused leave will be paid. For [Unused Holiday Days] unused days, the holiday pay is [Holiday Pay] [USD].": "Would unused holidays would be paid for if employee is termination?",
+  "The Employee will be enrolled in the Company's pension scheme in accordance with auto-enrolment legislation. Further details are available from [HR/Relevant Contact].": "Is the Pension clause applicable?",
+  "/The Employee may be required to work at [other locations]./": "Does the employee need to work at additional locations besides the normal place of work?",
   "The Employee may also be entitled to Company sick pay": "Is the sick pay policy applicable?",
-  // "The Employee shall not receive additional payment for overtime worked": "Should the employee not receive overtime payment?",
-  "The Employee is entitled to overtime pay at a rate of [Overtime Pay Rate] for authorized overtime work": "Does the employee receive overtime payment?",
-  // "Upon termination, unused leave will be paid. For [Unused Holiday Days] unused days, the holiday pay is [Holiday Pay] [USD].": "Is unused holiday pay applicable?",
-  "/ The Employee may be required to work at [other locations]. /": "Is the employee required to work at other locations?",
-  // "The Employee may be required to perform additional duties as reasonably assigned by the Company.": "Are additional duties applicable?"
+  "The Employee is entitled to overtime pay at a rate of [Overtime Pay Rate] for authorized overtime work": "Does the employee receive overtime payment?"
 };
 
 export const validateQuestionRelevance = (placeholder: string, question: string): boolean => {
@@ -144,16 +140,16 @@ export const determineQuestionType = (text: string): {
   let alternateType: QuestionType | undefined;
   let alternateValue: string | undefined;
 
-  // const fullProbationClause = "The first [Probation Period Length] of employment will be a probationary period. The Company shall assess the Employee’s performance and suitability during this time. The Company may extend the probationary period by up to [Probation Extension Length] if further assessment is required. During the probationary period, either party may terminate the employment by providing [one week's] written notice. Upon successful completion, the Employee will be confirmed in their role.";
+  // const fullProbationClause = "The first [Probation Period Length] of employment will be a probationary period. The Company shall assess the Employee's performance and suitability during this time. The Company may extend the probationary period by up to [Probation Extension Length] if further assessment is required. During the probationary period, either party may terminate the employment by providing [one week's] written notice. Upon successful completion, the Employee will be confirmed in their role.";
   // const fullTerminationClause = "After the probationary period, either party may terminate the employment by providing [Notice Period] written notice. The Company reserves the right to make a payment in lieu of notice. The Company may summarily dismiss the Employee without notice in cases of gross misconduct.";
   // const fullSickPayClause = "The Employee may also be entitled to Company sick pay.";
-  // const fullPensionClause = "The Employee will be enrolled in the Company’s pension scheme in accordance with auto-enrolment legislation. Further details are available from [HR/Relevant Contact].";
+  // const fullPensionClause = "The Employee will be enrolled in the Company's pension scheme in accordance with auto-enrolment legislation. Further details are available from [HR/Relevant Contact].";
   const normalizedText = text.trim().replace(/\s+/g, " ").replace(/\n/g, " ");
   console.log("Input text to determineQuestionType:", text);
   console.log("Normalized text:", normalizedText);
   // Define clause contents without headings
-  const probationClauseContent = "The first [Probation Period Length] of employment will be a probationary period. The Company shall assess the Employee’s performance and suitability during this time. Upon successful completion, the Employee will be confirmed in their role.";
-  const pensionClauseContent = "The Employee will be enrolled in the Company’s pension scheme in accordance with auto-enrolment legislation.";
+  const probationClauseContent = "The first [Probation Period Length] of employment will be a probationary period. The Company shall assess the Employee's performance and suitability during this time. Upon successful completion, the Employee will be confirmed in their role.";
+  const pensionClauseContent = "The Employee will be enrolled in the Company's pension scheme in accordance with auto-enrolment legislation.";
 
   // Strip heading if present and map to the clause content without heading
   let clauseContent = normalizedText;

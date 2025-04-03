@@ -168,8 +168,38 @@ const processAgreement = (html: string, answers: UserAnswers, isDarkMode: boolea
         "g"
       );
 
-      if (answer === false)
+      if (answer === false) {
         updatedHtml = updatedHtml.replace(overtimeYesRegex, "");
+      } else if (answer === true) {
+        // Get the values for unused holidays and holiday pay
+        const unusedHolidaysAnswer = answers["Specify the number of unused holidays?"];
+        const holidayPayAnswer = answers["Specify the holiday pay?"] as { amount: string; currency: string } | undefined;
+
+        // Create modified clause with actual values
+        let modifiedClause = overtimeYesClause;
+        
+        if (unusedHolidaysAnswer) {
+          modifiedClause = modifiedClause.replace(
+            "[Unused Holiday Days]",
+            `${unusedHolidaysAnswer}`
+          );
+        }
+        
+        if (holidayPayAnswer?.amount) {
+          const formattedHolidayPay = `${holidayPayAnswer.amount} ${holidayPayAnswer.currency}`;
+          modifiedClause = modifiedClause.replace(
+            "[Holiday Pay]",
+            formattedHolidayPay
+          );
+          modifiedClause = modifiedClause.replace("[USD]", "");
+        }
+
+        // Replace the original clause with the modified one
+        updatedHtml = updatedHtml.replace(
+          overtimeYesRegex,
+          `{${modifiedClause}}`
+        );
+      }
     }
 
     // SICKNESS ABSENCE
