@@ -77,7 +77,7 @@ const AppRoutes = () => {
       } />
       <Route path="/Matching-Exercise" element={
         <ProtectedRoute>
-          <MatchingExercise data={matchingData} levelId={1} />
+          <MatchingExercise data={matchingData} />
         </ProtectedRoute>
       } />
       <Route path="/Level-Two-Part-Two" element={

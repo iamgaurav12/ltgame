@@ -9,7 +9,6 @@ const ForgotPassword: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
-
   // Reset error when form changes
   useEffect(() => {
     if ((error || success) && formTouched) {

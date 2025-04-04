@@ -18,7 +18,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/Level-One-Quiz" element={<LevelOneQuizPage />} />
       <Route path="/Level-Two" element={<Level2 />} />
-      <Route path="/Matching-Exercise" element={<MatchingExercise data={matchingData} levelId={1} />} /> {/* Add new route */}
+      <Route path="/Matching-Exercise" element={<MatchingExercise data={matchingData} />} />
       <Route path="Level-Two-Part-Two" element={<LevelTwoPart_Two />} />
       <Route path="Level-One-Design" element={<LevelOneDesign />} />
     </Routes>
