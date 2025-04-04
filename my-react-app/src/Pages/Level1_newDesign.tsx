@@ -7,6 +7,7 @@ import incorrectSound from "../assets/incorrect.mp3";
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 // Initialize Firestore
 const db = getFirestore();
@@ -24,6 +25,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({ children }) => {
 };
 
 const LevelOneDesign = () => {
+  const navigate = useNavigate();
   const [score, setScore] = useState<number>(0);
   const [scoreChange, setScoreChange] = useState<number | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -461,7 +463,7 @@ const LevelOneDesign = () => {
             <button
               onClick={() => {
                 setShowPopup(false);
-                window.location.href = "/";
+                navigate("/dashboard");
               }}
               className="mt-4 md:mt-6 px-3 sm:px-4 md:px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-400 transition-all duration-300 cursor-pointer text-xs sm:text-sm md:text-base"
             >

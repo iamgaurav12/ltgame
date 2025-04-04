@@ -39,8 +39,6 @@ const MatchingExercise = ({ data, levelId }: MatchingExerciseProps) => {
   const [user, setUser] = useState<any>(null);
   const [highestScore, setHighestScore] = useState<number>(0);
   const [attempts, setAttempts] = useState<number>(0);
-  const [correctMatches, setCorrectMatches] = useState<number>(0);
-  const [totalMatches, setTotalMatches] = useState<number>(0);
   const [progressPercentage, setProgressPercentage] = useState<number>(0);
 
   // Refs & hooks
@@ -270,7 +268,6 @@ const MatchingExercise = ({ data, levelId }: MatchingExerciseProps) => {
     if (isCorrectMatch) {
       setScore((prevScore) => prevScore + CORRECT_MATCH_POINTS);
       change = CORRECT_MATCH_POINTS;
-      setCorrectMatches((prev) => prev + 1);
       correctSoundRef.current.play();
     } else {
       if (score > 0) {
@@ -294,9 +291,6 @@ const MatchingExercise = ({ data, levelId }: MatchingExerciseProps) => {
       [selectedTerm.id]: item.id,
     }));
 
-    // Update total matches
-    setTotalMatches((prev) => prev + 1);
-
     // Clear selected term
     setSelectedTerm(null);
 
@@ -317,8 +311,6 @@ const MatchingExercise = ({ data, levelId }: MatchingExerciseProps) => {
     setLines([]);
     setScore(0);
     setScoreChange(null);
-    setCorrectMatches(0);
-    setTotalMatches(0);
     setProgressPercentage(0);
     setShowCompletion(false);
   };
